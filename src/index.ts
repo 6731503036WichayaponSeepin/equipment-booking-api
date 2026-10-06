@@ -36,7 +36,15 @@ app.get('/api/equipment', async (c) => {
 
 app.post('/api/bookings', async (c) => {
 	try {
-		const body = await c.req.json()
+		let body: any
+
+		try {
+			body = await c.req.json()
+		} catch {
+			return c.json({
+				error: 'Invalid JSON body'
+			}, 400)
+		}
 		const {
 			equipment_id,
 			borrower_name,
@@ -49,6 +57,24 @@ app.post('/api/bookings', async (c) => {
 		if (!equipment_id || !borrower_name || !start_at || !end_at || !purpose) {
 			return c.json({
 				error: 'Missing required fields'
+			}, 400)
+		}
+
+		// Quality Gate: validate string fields
+		if (
+			typeof equipment_id !== 'string' ||
+			typeof borrower_name !== 'string' ||
+			typeof start_at !== 'string' ||
+			typeof end_at !== 'string' ||
+			typeof purpose !== 'string' ||
+			equipment_id.trim() === '' ||
+			borrower_name.trim() === '' ||
+			start_at.trim() === '' ||
+			end_at.trim() === '' ||
+			purpose.trim() === ''
+		) {
+			return c.json({
+				error: 'Fields must be non-empty strings'
 			}, 400)
 		}
 
@@ -188,13 +214,38 @@ app.patch('/api/bookings/:id', async (c) => {
 			return c.json({ error: 'Booking not found' }, 404)
 		}
 
-		const body = await c.req.json()
+		let body: any
+
+		try {
+			body = await c.req.json()
+		} catch {
+			return c.json({
+				error: 'Invalid JSON body'
+			}, 400)
+		}
 
 		const equipment_id = body.equipment_id ?? existing.equipment_id
 		const borrower_name = body.borrower_name ?? existing.borrower_name
 		const start_at = body.start_at ?? existing.start_at
 		const end_at = body.end_at ?? existing.end_at
 		const purpose = body.purpose ?? existing.purpose
+
+		if (
+			typeof equipment_id !== 'string' ||
+			typeof borrower_name !== 'string' ||
+			typeof start_at !== 'string' ||
+			typeof end_at !== 'string' ||
+			typeof purpose !== 'string' ||
+			equipment_id.trim() === '' ||
+			borrower_name.trim() === '' ||
+			start_at.trim() === '' ||
+			end_at.trim() === '' ||
+			purpose.trim() === ''
+		) {
+			return c.json({
+				error: 'Fields must be non-empty strings'
+			}, 400)
+		}
 
 		const startTime = new Date(String(start_at))
 		const endTime = new Date(String(end_at))
